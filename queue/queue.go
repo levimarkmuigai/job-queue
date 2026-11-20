@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 )
-	
+
 var ErrNilPayload = errors.New("queue: payload is nil")
 
 type Store interface {
-	Insert(ctx context.Context, payload []byte) (int64, error)
+	Insert(ctx context.Context, jobType string, payload []byte) (int64, error)
 }
 
 type Queue struct {
@@ -21,7 +21,7 @@ func NewQueue(s Store) *Queue {
 	return &Queue{store: s}
 }
 
-func (q *Queue) Enqueue(ctx context.Context, payload map[string]any) (int64, error) {
+func (q *Queue) Enqueue(ctx context.Context, jobType string, payload map[string]any) (int64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
 	}
@@ -32,7 +32,7 @@ func (q *Queue) Enqueue(ctx context.Context, payload map[string]any) (int64, err
 	if err != nil {
 		return 0, fmt.Errorf("marshal payload: %w", err)
 	}
-	id, err := q.store.Insert(ctx, b)
+	id, err := q.store.Insert(ctx, jobType, b)
 	if err != nil {
 		return id, fmt.Errorf("insert job: %w", err)
 	}
