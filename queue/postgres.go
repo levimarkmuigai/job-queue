@@ -30,7 +30,7 @@ func NewPostgresStore(db *sql.DB) *PostgresStore {
 func (s *PostgresStore) Insert(ctx context.Context, jobType string, payload []byte) (int64, error) {
 	var id int64
 	err := s.db.QueryRowContext(ctx,
-		`INSERT INTO jobs (type, payload) VALUES ($1, $2::jsonb) RETURNING id`,
+		`INSERT INTO jobs (jobType, payload) VALUES ($1, $2::jsonb) RETURNING id`,
 		jobType, string(payload)).Scan(&id)
 	return id, err
 }
