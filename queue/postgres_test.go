@@ -62,3 +62,32 @@ func TestPostgresStore_Insert(t *testing.T) {
 		t.Errorf("scheduled_at = %d, want >= %d", scheduledAt, before)
 	}
 }
+
+func TestPostgresStore_Claim(t *testing.T) {
+	s := newTestStore(t)
+	first, err := s.Insert(t.Context(), "send_email", []byte(`{"to":"k@e.com"}`))
+	if err != nil {
+		t.Fatalf("Insert() error = %v", err)
+	}
+
+	job, err := s.Claim(t.Context())
+	if err != nil {
+		t.Fatalf("Claim() error = %v", err)
+	}
+
+	if job.ID != first {
+		t.Errorf("job.ID = %d, want %d", job.ID, first)
+	}
+	if job.JobType != "send_email" {
+		t.Errorf("job.JobType = %q, want %q", job.JobType, "send_email")
+	}
+	if got := job.Payload["to"]; got != "k@e.com" {
+		t.Errorf(`job.Payload["to"] = %v, want %q`, got, "k@e.com")
+	}
+	if job.Status != "running" {
+		t.Errorf("job.Status = %q, want %q", job.Status, "running")
+	}
+	if job.Attempts != 1 {
+		t.Errorf("job.Attempts = %d, want 1", job.Attempts)
+	}
+}
